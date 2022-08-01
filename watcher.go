@@ -35,6 +35,8 @@ type Watcher struct {
 	running   bool
 	callback  func(string)
 	keyName   string
+	username  string
+	password  string
 }
 
 // finalizer is the destructor for Watcher.
@@ -44,12 +46,14 @@ func finalizer(w *Watcher) {
 
 // NewWatcher is the constructor for Watcher.
 // endpoints is the endpoints for etcd clusters.
-func NewWatcher(endpoints []string, keyName string) (persist.Watcher, error) {
+func NewWatcher(endpoints []string, keyName string, username string, password string) (persist.Watcher, error) {
 	w := &Watcher{}
 	w.endpoints = endpoints
 	w.running = true
 	w.callback = nil
 	w.keyName = keyName
+	w.username = username
+	w.password = password
 
 	// Create the client.
 	err := w.createClient()
@@ -78,6 +82,8 @@ func (w *Watcher) createClient() error {
 		// set timeout per request to fail fast when the target endpoints is unavailable
 		DialKeepAliveTimeout: time.Second * 10,
 		DialTimeout:          time.Second * 30,
+		Username:             w.username,
+		Password:             w.password,
 	}
 
 	c, err := client.New(cfg)
